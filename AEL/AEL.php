@@ -2,11 +2,11 @@
 
 /*
 Plugin Name: Attributes for external links
-Plugin URI: http://URI_Of_Page_Describing_Plugin_and_Updates
+Plugin URI: https://github.com/codedamage/Attributes-for-External-Links/
 Description: Test task for marakasdesign interview. Adds attributes for external links
 Version: 1.0
 Author: Viktor Oleksiukh
-Author URI: http://URI_Of_The_Plugin_Author
+Author URI: https://github.com/codedamage/
 License: GPL2
 */
 
