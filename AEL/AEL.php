@@ -50,8 +50,10 @@ class AEL
         add_action( 'admin_menu', array( $this, 'add_plugin_page' ) );
         add_action( 'admin_init', array( $this, 'page_init' ) );
         // front end
-        add_filter('the_content', array( $this, 'add_rel_nofollow' ));
-        add_filter('the_content', array( $this, 'add_target__blank' ));
+        add_filter('the_content', array($this, 'ael_filtering'));
+        add_action( 'ael_filtering',  array($this, 'ael_filtering') );
+
+
     }
 
     /**
@@ -73,39 +75,36 @@ class AEL
      *
      * @return array
      */
-    public function add_target__blank($content) {
+    public function ael_filtering($content) {
         return preg_replace_callback('/<a[^>]+/', function($matches) {
 
-            $proceedLink = $matches[0];
-            $SiteLink = get_bloginfo('url');
+            $link = $matches[0];
+            $site_link = get_bloginfo('url');
+            //get current options state for conditional logic
+            $this->options = get_option( 'ael_option_name' );
 
-            if (strpos($link, 'rel') === false) {
-                $proceedLink = preg_replace("%(href=\S(?!$SiteLink))%i", 'target="_blank" $1', $proceedLink);
-            } elseif (preg_match("%href=\S(?!$SiteLink)%i", $proceedLink)) {
-                $proceedLink = preg_replace('/target=\S(?!_blank)\S*/i', 'target="_blank"', $proceedLink);
+            //Add target _blank filtering
+            if(isset($this->options['blank'] ) && $this->options['blank'] == 'true') {
+                if (strpos($link, 'target') === false) {
+                    $link = preg_replace("%(href=\S(?!$site_link))%i", 'target="_blank" $1', $link);
+                } elseif (preg_match("%href=\S(?!$site_link)%i", $link)) {
+                    $link = preg_replace('/target=\S(?!_blank)\S*/i', 'target="_blank"', $link);
+                }
             }
 
-            return $proceedLink;
+            //Add rel="nofollow" filtering
+            if(isset($this->options['nofollow'] ) && $this->options['nofollow'] == 'true') {
+                if (strpos($link, 'rel') === false) {
+                    $link = preg_replace("%(href=\S(?!$site_link))%i", 'rel="nofollow" $1', $link);
+                } elseif (preg_match("%href=\S(?!$site_link)%i", $link)) {
+                    $link = preg_replace('/rel=\S(?!nofollow)\S*/i', 'rel="nofollow"', $link);
+                }
+            }
+            return $link;
 
         }, $content);
     }
 
-    public function add_rel_nofollow($content) {
-        return preg_replace_callback('/<a[^>]+/', function($matches) {
-
-            $proceedLink = $matches[0];
-            $SiteLink = get_bloginfo('url');
-
-            if (strpos($link, 'rel') === false) {
-                $proceedLink = preg_replace("%(href=\S(?!$SiteLink))%i", 'rel="nofollow" $1', $proceedLink);
-            } elseif (preg_match("%href=\S(?!$SiteLink)%i", $proceedLink)) {
-                $proceedLink = preg_replace('/rel=\S(?!nofollow)\S*/i', 'rel="nofollow"', $proceedLink);
-            }
-
-            return $proceedLink;
-
-        }, $content);
-    }
 
     /**
      * Admin settings page init and render.
@@ -153,7 +152,7 @@ class AEL
         register_setting(
             'ael_option_group', // Option group
             'ael_option_name', // Option name
-            array( $this, 'sanitize' ) // Sanitize
+            array( $this ) // Sanitize
         );
 
         add_settings_section(
@@ -165,7 +164,7 @@ class AEL
 
         add_settings_field(
             'nofollow', // ID
-            'Use rel "nofollow"', // Title
+            'Nofollow attribute for external links (rel="nofollow")', // Title
             array( $this, 'nofollow_callback' ), // Callback
             'ael-setting-admin', // Page
             'setting_section_id' // Section
@@ -173,29 +172,13 @@ class AEL
 
         add_settings_field(
             'blank',
-            'Use target "_blank"',
+            'Open links in a new tab (target="_blank")',
             array( $this, 'blank_callback' ),
             'ael-setting-admin',
             'setting_section_id'
         );
     }
 
-    /**
-     * Sanitize each setting field as needed
-     *
-     * @param array $input Contains all settings fields as array keys
-     */
-    public function sanitize( $input )
-    {
-        $new_input = array();
-        if( isset( $input['nofollow'] ) )
-            $new_input['nofollow'] = $input['nofollow'];
-
-        if( isset( $input['blank'] ) )
-            $new_input['blank'] =  $input['blank'];
-
-        return $new_input;
-    }
 
     /**
      * Print the Section text
@@ -210,7 +193,7 @@ class AEL
      */
     public function nofollow_callback()
     {
-        if($this->options['nofollow']){
+        if(isset($this->options['nofollow']) && $this->options['nofollow']){
             $checked = 'checked';
         }
         else{
@@ -224,7 +207,7 @@ class AEL
      */
     public function blank_callback()
     {
-        if($this->options['blank']){
+        if(isset($this->options['blank']) && $this->options['blank']){
             $checked = 'checked';
         }
         else{
