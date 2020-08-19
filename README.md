@@ -20,9 +20,9 @@ This section describes how to install the plugin and get it working.
 3. Click s"Save changes"
 4. Done
 
-# add_filter()
+# apply_filters()
 
-You can use plugin functional via add_filter().
+You can use plugin functional via apply_filters().
 **Example:**
 ```php
 global $post;
