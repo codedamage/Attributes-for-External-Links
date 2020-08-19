@@ -10,8 +10,7 @@ This section describes how to install the plugin and get it working.
 
 1. Upload `AEL` to the `/wp-content/plugins/` directory.
 2. Activate the plugin through the 'Plugins' menu in WordPress.
-3. Add some text in the fields on a post
-4. That's it.
+3. That's it.
 
 # How to use #
 
